@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <dirent.h>
+#include <fstream>
 
 #ifdef OPENMP
 #include <omp.h>
@@ -27,6 +28,18 @@ int createdb(int argc, const char **argv, const Command& command) {
     std::vector<std::string> filenames(par.filenames);
     std::string outputName = filenames.back();
     filenames.pop_back();
+    auto flist = filenames.back();
+    filenames.pop_back();
+    if (filenames.size() != 0) {
+        Debug(Debug::INFO) << "Expect a list of pdb files\n";
+        return EXIT_FAILURE;
+    }
+    std::ifstream file(flist);
+    std::string s;
+    while (getline(file, s)) {
+        filenames.push_back(s);
+    }
+    /*
     if(filenames.size() == 1 && FileUtil::directoryExists(filenames.back().c_str())){
         std::vector<std::string> dirs;
         dirs.push_back(filenames.back());
@@ -50,6 +63,7 @@ int createdb(int argc, const char **argv, const Command& command) {
             }
         }
     }
+    */
     Debug(Debug::INFO) << "Output file: " << par.db2 << "\n";
     SORT_PARALLEL(filenames.begin(), filenames.end());
     DBWriter torsiondbw((outputName+"_ss").c_str(), (outputName+"_ss.index").c_str(), static_cast<unsigned int>(par.threads), par.compressed, Parameters::DBTYPE_AMINO_ACIDS);
